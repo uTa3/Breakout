@@ -1,58 +1,42 @@
 package breakout
 
 import (
-	"image/color"
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-
-const (
-	bollSize = 5
-)
-
-var (
-	bollImage *ebiten.Image
-	bollSpeed = 2
-)
-
 type Boll struct {
 	x, y int
-	dx, dy int
+	velocityX, velocityY int
+	radius int
+	image *ebiten.Image
 }
 
-func NewBoll(posX, posY int) *Boll {
-	return &Boll{x: posX, y: posY,dx: -bollSpeed,dy: -bollSpeed}
+func NewBoll(posX, posY, vX, vY, r int, img *ebiten.Image) *Boll {
+	return &Boll{x: posX, y: posY, velocityX: vX, velocityY: vY, radius: r, image: img}
 }
 
-func init() {
-	bollImage = ebiten.NewImage(bollSize, bollSize)
-	bollImage.Fill(color.White)
-}
-
-func (b *Boll) move()  {
-	// 衝突したら反転
-	if (b.x < bollSize/2) || (b.x > ScreenWidth - bollSize/2) {
-		b.dx *= -1
+func (boll *Boll) Update(bar *Bar)  {
+	/* bounce off */
+	// when the ball reaches the edge
+	if (boll.x - boll.radius < 0) || (ScreenWidth < boll.x + boll.radius) {
+		boll.velocityX = -boll.velocityX
 	}
-	if (b.y < bollSize/2) || (b.y > ScreenHeight - bollSize/2) {
-		b.dy *= -1
-	}
-	b.x += b.dx
-	b.y += b.dy
+	if (boll.y - boll.radius < 0) || (ScreenHeight < boll.y + boll.radius) {
+		boll.velocityY = -boll.velocityY
+	}	
+	boll.x += boll.velocityX
+	boll.y += boll.velocityY
 }
 
-func (b *Boll) Update()  {
-	b.move()
-}
-
-func (b *Boll) Draw(screen *ebiten.Image)  {
+func (boll *Boll) Draw(screen *ebiten.Image)  {
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-bollSize/2, -bollSize/2)
-	op.GeoM.Translate(float64(b.x), float64(b.y))
-	screen.DrawImage(bollImage, op)
-	ebitenutil.DebugPrintAt(screen, "x: " + strconv.Itoa(b.x), 0, 0)
-	ebitenutil.DebugPrintAt(screen, "y: " + strconv.Itoa(b.y), 0, 12)
+	// set Bar.X, Y as the center of the image
+	op.GeoM.Translate(-float64(boll.radius), -float64(boll.radius))
+	op.GeoM.Translate(float64(boll.x), float64(boll.y))
+	screen.DrawImage(boll.image, op)
+	ebitenutil.DebugPrintAt(screen, "x: " + strconv.Itoa(boll.x), 0, 0)
+	ebitenutil.DebugPrintAt(screen, "y: " + strconv.Itoa(boll.y), 0, 12)
 }

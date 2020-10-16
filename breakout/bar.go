@@ -1,7 +1,6 @@
 package breakout
 
 import (
-	"image/color"
 	_ "image/png"
 	"strconv"
 
@@ -9,52 +8,40 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-const (
-	barWidth = 100
-	barHeight = 10
-)
-
-var (
-	barImage *ebiten.Image
-	barSpeed = 8
-)
-
 type Bar struct {
 	x, y int
+	speed int
+	width, height int
+	image *ebiten.Image
 }
 
-func NewBar(posX, posY int) *Bar {
-	return &Bar{x: posX, y: posY}
+func NewBar(posX, posY, s, w, h int, img *ebiten.Image) *Bar {
+	return &Bar{x: posX, y: posY, speed: s, width: w, height: h, image: img}
 }
 
-func init() {
-	barImage = ebiten.NewImage(barWidth, barHeight)
-	barImage.Fill(color.White)
-}
-
-func (b *Bar) move() {
-	var dx int
+func (bar *Bar) Update()  {
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		dx = -barSpeed
+		bar.x -= bar.speed
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
-		dx = barSpeed
+		bar.x += bar.speed
 	}
-	// はみ出していなかったら足す
-	if !(b.x + dx < barWidth/2 || b.x + dx > ScreenWidth - barWidth/2) {
-		b.x += dx
+
+	// when bar reaches the edge
+	if bar.x - bar.width/2 < 0 {
+		bar.x = bar.width/2
+	}
+	if ScreenWidth < bar.x + bar.width/2 {
+		bar.x = ScreenWidth - bar.width/2
 	}
 }
 
-func (b *Bar) Update()  {
-	b.move()
-}
-
-func (b *Bar) Draw(screen *ebiten.Image)  {
+func (bar *Bar) Draw(screen *ebiten.Image)  {
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-barWidth/2, -barHeight/2)
-	op.GeoM.Translate(float64(b.x), float64(b.y))
-	screen.DrawImage(barImage, op)
-	ebitenutil.DebugPrintAt(screen, "x: " + strconv.Itoa(b.x), 0, ScreenHeight-26)
-	ebitenutil.DebugPrintAt(screen, "y: " + strconv.Itoa(b.y), 0, ScreenHeight-14)
+	// set Bar.X, Y as the center of the image
+	op.GeoM.Translate(-float64(bar.width/2), -float64(bar.width/2))
+	op.GeoM.Translate(float64(bar.x), float64(bar.y))
+	screen.DrawImage(bar.image, op)
+	ebitenutil.DebugPrintAt(screen, "x: " + strconv.Itoa(bar.x), 0, ScreenHeight-26)
+	ebitenutil.DebugPrintAt(screen, "y: " + strconv.Itoa(bar.y), 0, ScreenHeight-14)
 }
