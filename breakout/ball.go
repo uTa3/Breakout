@@ -7,36 +7,47 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-type Boll struct {
+type Ball struct {
 	x, y int
 	velocityX, velocityY int
 	radius int
 	image *ebiten.Image
 }
 
-func NewBoll(posX, posY, vX, vY, r int, img *ebiten.Image) *Boll {
-	return &Boll{x: posX, y: posY, velocityX: vX, velocityY: vY, radius: r, image: img}
+func NewBoll(posX, posY, vX, vY, r int, img *ebiten.Image) *Ball {
+	return &Ball{x: posX, y: posY, velocityX: vX, velocityY: vY, radius: r, image: img}
 }
 
-func (boll *Boll) Update(bar *Bar)  {
-	/* bounce off */
+func (ball *Ball) Update(bar *Bar) {
+	// bouncd off
 	// when the ball reaches the edge
-	if (boll.x - boll.radius < 0) || (ScreenWidth < boll.x + boll.radius) {
-		boll.velocityX = -boll.velocityX
+	if (ball.x - ball.radius < 0) || (ScreenWidth < ball.x + ball.radius) {
+		ball.velocityX = -ball.velocityX
 	}
-	if (boll.y - boll.radius < 0) || (ScreenHeight < boll.y + boll.radius) {
-		boll.velocityY = -boll.velocityY
-	}	
-	boll.x += boll.velocityX
-	boll.y += boll.velocityY
+	if (ball.y - ball.radius < 0) || (ScreenHeight < ball.y + ball.radius) {
+		ball.velocityY = -ball.velocityY
+	}
+	// when the ball
+	if bar.x - bar.width/2 < ball.x + ball.radius && // left
+		ball.x - ball.radius < bar.x + bar.width/2 && // right
+		bar.y - bar.height/2 < ball.y && ball.y < bar.y + bar.height/2 {
+		ball.velocityX = -ball.velocityX
+	}
+	if bar.y - bar.height/2 < ball.y + ball.radius && // upper
+		ball.y - ball.radius < bar.y + bar.height/2 && // lower
+		bar.x - bar.width/2 < ball.x && ball.x < bar.x + bar.width/2 {
+		ball.velocityY = -ball.velocityY
+	}
+	ball.x += ball.velocityX
+	ball.y += ball.velocityY
 }
 
-func (boll *Boll) Draw(screen *ebiten.Image)  {
+func (ball *Ball) Draw(screen *ebiten.Image)  {
 	op := &ebiten.DrawImageOptions{}
 	// set Bar.X, Y as the center of the image
-	op.GeoM.Translate(-float64(boll.radius), -float64(boll.radius))
-	op.GeoM.Translate(float64(boll.x), float64(boll.y))
-	screen.DrawImage(boll.image, op)
-	ebitenutil.DebugPrintAt(screen, "x: " + strconv.Itoa(boll.x), 0, 0)
-	ebitenutil.DebugPrintAt(screen, "y: " + strconv.Itoa(boll.y), 0, 12)
+	op.GeoM.Translate(-float64(ball.radius), -float64(ball.radius))
+	op.GeoM.Translate(float64(ball.x), float64(ball.y))
+	screen.DrawImage(ball.image, op)
+	ebitenutil.DebugPrintAt(screen, "x: " + strconv.Itoa(ball.x), 0, 0)
+	ebitenutil.DebugPrintAt(screen, "y: " + strconv.Itoa(ball.y), 0, 12)
 }
