@@ -14,10 +14,6 @@ type Ball struct {
 	image                *ebiten.Image
 }
 
-func NewBoll(posX, posY, vX, vY, r int, img *ebiten.Image) *Ball {
-	return &Ball{x: posX, y: posY, velocityX: vX, velocityY: vY, radius: r, image: img}
-}
-
 func (ball *Ball) Update(bar *Bar) {
 	// bouncd off
 	// when the ball reaches the edge
@@ -37,7 +33,7 @@ func (ball *Ball) Update(bar *Bar) {
 		ball.x-ball.radius < bar.x+bar.width/2 && // right
 		bar.y-bar.height/2 < ball.y && ball.y < bar.y+bar.height/2 {
 		ball.velocityX = -ball.velocityX
-		// Avoid overlapping with the bar
+		// Avoid overlapping with the bar (more accurate)
 		if ball.x < bar.x {
 			ball.x = bar.x - bar.width/2 - ball.radius
 		} else if bar.x < ball.y {

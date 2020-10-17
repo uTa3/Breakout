@@ -15,10 +15,6 @@ type Bar struct {
 	image *ebiten.Image
 }
 
-func NewBar(posX, posY, s, w, h int, img *ebiten.Image) *Bar {
-	return &Bar{x: posX, y: posY, speed: s, width: w, height: h, image: img}
-}
-
 func (bar *Bar) Update()  {
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 		bar.x -= bar.speed
