@@ -2,8 +2,14 @@ package breakout
 
 import (
 	"image/color"
+	"log"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/goitalic"
+	"golang.org/x/image/font/opentype"
 )
 
 const (
@@ -30,12 +36,54 @@ const (
 var (
 	barSpeed     = 8
 	ballVelocity = 4
+
+	imageClear = ebiten.NewImage(ScreenWidth, ScreenHeight)
+	imageGameover = ebiten.NewImage(ScreenWidth, ScreenHeight)
 )
 
 type Game struct {
 	bar    *Bar
 	ball   *Ball
 	blocks [][]*Block
+	gameclear bool
+	gameover bool
+}
+
+func init() {
+	f, err := opentype.Parse(goitalic.TTF)
+	if err != nil {
+		log.Fatalf("Parse: %v", err)
+	}
+	face, err := opentype.NewFace(f, &opentype.FaceOptions{
+		Size:    64,
+		DPI:     72,
+		Hinting: font.HintingNone,
+	})
+	if err != nil {
+		log.Fatalf("NewFace: %v", err)
+	}
+	imageGameover.Fill(color.White)
+	imageClear.Fill(color.White)
+	drawTextCenter(imageGameover, "GAME OVER", face, 0, 0, color.Black)
+	drawTextCenter(imageClear, "GAME CLEAR", face, 0, 0, color.Black)
+}
+
+func drawTextCenter(image *ebiten.Image, str string, f font.Face, x,y int, clr color.Color) {
+	w := textWidth(f, str)
+	x += (ScreenWidth - w)/2
+	text.Draw(image, str, f, x, ScreenHeight/2, clr)
+}
+
+func textWidth(f font.Face, str string) int {
+	maxW := 0
+	for _, line := range strings.Split(str, "\n") {
+		b, _ := font.BoundString(f, line)
+		w := (b.Max.X - b.Min.X).Ceil()
+		if maxW < w {
+			maxW = w
+		}
+	}
+	return maxW
 }
 
 func NewGame() (*Game, error) {
@@ -56,7 +104,7 @@ func NewGame() (*Game, error) {
 		x:         initBallX,
 		y:         initBallY,
 		velocityX: ballVelocity,
-		velocityY: ballVelocity,
+		velocityY: -ballVelocity,
 		radius:    ballRadius,
 		image:     ebiten.NewImage(ballRadius, ballRadius),
 	}
@@ -80,6 +128,20 @@ func NewGame() (*Game, error) {
 }
 
 func (g *Game) Update() error {
+	aliveBlocks := 0
+	for r := 0; r < row; r++ {
+		for c := 0; c < column; c++ {
+			if g.blocks[r][c].isAlive {
+				aliveBlocks++
+			}
+		}
+	}
+	if aliveBlocks == 0 {
+		g.gameclear = true
+	}
+	if g.bar.y < g.ball.y {
+		g.gameover = true;
+	}
 	g.bar.Update()
 	g.ball.Update()
 	// when the ball hits the bar
@@ -148,12 +210,18 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.ball.Draw(screen)
-	g.bar.Draw(screen)
-	for r := 0; r < row; r++ {
-		for c := 0; c < column; c++ {
-			if g.blocks[r][c].isAlive {
-				g.blocks[r][c].Draw(screen)
+	if g.gameclear {
+		screen.DrawImage(imageClear, nil)
+	} else if g.gameover {
+		screen.DrawImage(imageGameover, nil)
+	} else {
+		g.ball.Draw(screen)
+		g.bar.Draw(screen)
+		for r := 0; r < row; r++ {
+			for c := 0; c < column; c++ {
+				if g.blocks[r][c].isAlive {
+					g.blocks[r][c].Draw(screen)
+				}
 			}
 		}
 	}
