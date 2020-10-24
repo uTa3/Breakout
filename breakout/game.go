@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/goitalic"
@@ -37,16 +38,16 @@ var (
 	barSpeed     = 8
 	ballVelocity = 4
 
-	imageClear = ebiten.NewImage(ScreenWidth, ScreenHeight)
+	imageClear    = ebiten.NewImage(ScreenWidth, ScreenHeight)
 	imageGameover = ebiten.NewImage(ScreenWidth, ScreenHeight)
 )
 
 type Game struct {
-	bar    *Bar
-	ball   *Ball
-	blocks [][]*Block
+	bar       *Bar
+	ball      *Ball
+	blocks    [][]*Block
 	gameclear bool
-	gameover bool
+	gameover  bool
 }
 
 func init() {
@@ -68,9 +69,9 @@ func init() {
 	drawTextCenter(imageClear, "GAME CLEAR", face, 0, 0, color.Black)
 }
 
-func drawTextCenter(image *ebiten.Image, str string, f font.Face, x,y int, clr color.Color) {
+func drawTextCenter(image *ebiten.Image, str string, f font.Face, x, y int, clr color.Color) {
 	w := textWidth(f, str)
-	x += (ScreenWidth - w)/2
+	x += (ScreenWidth - w) / 2
 	text.Draw(image, str, f, x, ScreenHeight/2, clr)
 }
 
@@ -89,7 +90,12 @@ func textWidth(f font.Face, str string) int {
 func NewGame() (*Game, error) {
 	g := &Game{}
 	var err error
-	// generate a new obj, bar, ball, block
+	g.init()
+	return g, err
+}
+
+// generate a new obj, bar, ball, block
+func (g *Game) init() {
 	g.bar = &Bar{
 		x:      initBarX,
 		y:      initBarY,
@@ -124,10 +130,15 @@ func NewGame() (*Game, error) {
 			g.blocks[r][c].image.Fill(color.White)
 		}
 	}
-	return g, err
 }
 
 func (g *Game) Update() error {
+	if g.gameover || g.gameclear {
+		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+			g.init()
+			g.gameover, g.gameclear = false, false
+		}
+	}
 	aliveBlocks := 0
 	for r := 0; r < row; r++ {
 		for c := 0; c < column; c++ {
@@ -140,7 +151,7 @@ func (g *Game) Update() error {
 		g.gameclear = true
 	}
 	if g.bar.y < g.ball.y {
-		g.gameover = true;
+		g.gameover = true
 	}
 	g.bar.Update()
 	g.ball.Update()
@@ -210,10 +221,10 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.gameclear {
-		screen.DrawImage(imageClear, nil)
-	} else if g.gameover {
+	if g.gameover {
 		screen.DrawImage(imageGameover, nil)
+	} else if g.gameclear {
+		screen.DrawImage(imageClear, nil)
 	} else {
 		g.ball.Draw(screen)
 		g.bar.Draw(screen)
