@@ -35,8 +35,8 @@ const (
 )
 
 var (
-	barSpeed     = 8
-	ballVelocity = 4
+	barSpeed  = 8
+	ballSpeed = 4
 
 	imageClear    = ebiten.NewImage(ScreenWidth, ScreenHeight)
 	imageGameover = ebiten.NewImage(ScreenWidth, ScreenHeight)
@@ -109,8 +109,8 @@ func (g *Game) init() {
 	g.ball = &Ball{
 		x:         initBallX,
 		y:         initBallY,
-		velocityX: ballVelocity,
-		velocityY: -ballVelocity,
+		velocityX: ballSpeed,
+		velocityY: -ballSpeed,
 		radius:    ballRadius,
 		image:     ebiten.NewImage(ballRadius, ballRadius),
 	}
@@ -138,20 +138,21 @@ func (g *Game) Update() error {
 			g.init()
 			g.gameover, g.gameclear = false, false
 		}
-	}
-	aliveBlocks := 0
-	for r := 0; r < row; r++ {
-		for c := 0; c < column; c++ {
-			if g.blocks[r][c].isAlive {
-				aliveBlocks++
+	} else {
+		aliveBlocks := 0
+		for r := 0; r < row; r++ {
+			for c := 0; c < column; c++ {
+				if g.blocks[r][c].isAlive {
+					aliveBlocks++
+				}
 			}
 		}
-	}
-	if aliveBlocks == 0 {
-		g.gameclear = true
-	}
-	if g.bar.y < g.ball.y {
-		g.gameover = true
+		if aliveBlocks == 0 {
+			g.gameclear = true
+		}
+		if g.bar.y < g.ball.y {
+			g.gameover = true
+		}
 	}
 	g.bar.Update()
 	g.ball.Update()
